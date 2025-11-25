@@ -86,7 +86,7 @@ public class SaveManager {
         }
     }
 
-    public static int getPositionX() {
+    public static double getPositionX() {
         try (
             var conn = DriverManager.getConnection("jdbc:sqlite:" + saveFilePath);
             var statement = conn.createStatement();
@@ -95,13 +95,13 @@ public class SaveManager {
             
             var rs = statement.executeQuery("SELECT position_x FROM progress");
             if (rs.next()) {
-                return rs.getInt("position_x");
+                return rs.getDouble("position_x");
             }
         } catch (SQLException e) {
         }
     }
 
-    public static int getPositionY() {
+    public static double getPositionY() {
         try (
             var conn = DriverManager.getConnection("jdbc:sqlite:" + saveFilePath);
             var statement = conn.createStatement();
@@ -110,7 +110,7 @@ public class SaveManager {
             
             var rs = statement.executeQuery("SELECT position_y FROM progress");
             if (rs.next()) {
-                return rs.getInt("position_y");
+                return rs.getDouble("position_y");
             }
         } catch (SQLException e) {
         }
