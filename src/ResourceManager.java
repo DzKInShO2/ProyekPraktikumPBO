@@ -6,11 +6,17 @@ import javax.swing.*;
 import javax.imageio.*;
 
 public class ResourceManager {
+    public final int PLAYER_SIZE = 32;
     public final int TILE_SIZE = 16;
+    public final int TILE_TO_SCREEN = 4;
+
+    public final int PLAYER_IDLE = 0;
 
     private static ResourceManager instance;
 
     private Image[] tiles;
+    private Image[] player;
+
     private int tileCountX;
     private int tileCountY;
 
@@ -29,7 +35,14 @@ public class ResourceManager {
                     tiles[i++] = (Image)sub;
                 }
             }
+            player = new Image[1];
+
+            var playerIdle = ImageIO.read(new File("res/PixelAdventure1Free/Main Characters/Virtual Guy/Idle (32x32).png"))
+                .getSubimage(0, 0, PLAYER_SIZE, PLAYER_SIZE);
+
+            player[PLAYER_IDLE] = playerIdle;
         } catch (Exception e) {}
+
     }
 
     public static ResourceManager getInstance() {
@@ -49,5 +62,9 @@ public class ResourceManager {
 
     public int getTileCountY() {
         return tileCountY;
+    }
+
+    public Image getPlayer(int mode) {
+        return player[mode];
     }
 }
