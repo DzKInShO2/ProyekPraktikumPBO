@@ -3,8 +3,16 @@ import java.awt.*;
 public class Player extends Entity {
     private int health;
 
+    private float velocityY;
+    private final float GRAVITY = 9.8f;
+
+    private final float SPEED = 10.0f;
+    private final float JUMP_FORCE = 7.0f;
+
     public Player(int x, int y) {
         super(x, y);
+
+        velocityY = 0;
     }
 
     public int getHealth() {
@@ -19,6 +27,8 @@ public class Player extends Entity {
     }
 
     public void update(float dt, Level level) {
+        // Pengumpulan informasi yang dibutuhkan untuk membuat karakter
+        // bergerak secara konsisten
         var res = ResourceManager.getInstance();
         var input = InputManager.getInstance();
 
@@ -27,31 +37,36 @@ public class Player extends Entity {
         var playerSize = res.PLAYER_SIZE * res.TILE_TO_SCREEN;
         var tileSize = res.TILE_SIZE * res.TILE_TO_SCREEN;
 
-        var dirX = input.getMoveRight() ? 1 : (input.getMoveLeft() ? -1 : 0);
+        // Gerakan di sumbu-Y
+        var isOnAir = level.isTileEmpty(gridX, gridY + playerToTileRatio);
+        if (isOnAir) {
+            velocityY -= GRAVITY * dt * tileSize;
+        } else {
+            velocityY = 0;
 
-        var newPosX = posX + dirX * tileSize * 5 * dt;
-        var newGridX = (int)(newPosX / tileSize);
-        if (!level.isTileEmpty(newGridX + (playerToTileRatio * dirX), gridY)) {
-            newPosX = posX;
-            newGridX = gridX;
-        } 
-
-        posX = newPosX;
-        gridX = newGridX;
-
-        var newPosY = posY + tileSize * 9.8f * dt;
-        if (input.getJump()) {
-            newPosY -= tileSize;
+            // Entah kenapa harus nge-print sesuatu disini supaya ndak
+            // ngelag setelah lompat
+            System.out.printf("\033[s\033[u", gridY);
         }
 
-        var newGridY = (int)(newPosY / tileSize);
-        if (!level.isTileEmpty(gridX, newGridY + playerToTileRatio)) {
-            newPosY = posY;
-            newGridY = gridY;
-        } 
+        if (!isOnAir && input.getJump()) {
+            velocityY = tileSize * JUMP_FORCE;
+        }
 
-        posY = newPosY;
-        gridY = newGridY;
+        posY -= velocityY * dt;
+        gridY = (int)(posY / tileSize);
+
+        // Gerakan di sumbu-X
+        var directionX = input.getMoveRight() ? 1 : (input.getMoveLeft() ? -1 : 0);
+        if (directionX != 0) {
+            var isNextTileEmpty = level.isTileEmpty(gridX, gridY);
+            if (isNextTileEmpty) {
+                var velocityX = directionX * SPEED * tileSize * dt;
+
+                posX += velocityX;
+                gridX = (int)(posX / tileSize);
+            }
+        }
     }
 
     public void draw(Graphics g) {
