@@ -6,7 +6,11 @@ public abstract class Entity {
     public int gridX;
     public int gridY;
 
-    public Entity(int x, int y) {
+    protected Level level;
+
+    public Entity(Level level, int x, int y) {
+        this.level = level;
+
         gridX = x;
         gridY = y;
 
@@ -17,6 +21,6 @@ public abstract class Entity {
         posY = y * tileSize;
     }
 
-    public abstract void update(float dt, Level level);
+    public abstract void update(float dt);
     public abstract void draw(Graphics g);
 }

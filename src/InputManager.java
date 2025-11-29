@@ -1,11 +1,11 @@
 import java.awt.event.*;
 
 public class InputManager extends KeyAdapter {
-    private static InputManager instance;
+    private static volatile InputManager instance;
 
-    private boolean isMoveRight;
-    private boolean isMoveLeft;
-    private boolean isJump;
+    private volatile boolean isMoveRight;
+    private volatile boolean isMoveLeft;
+    private volatile boolean isJump;
 
     private InputManager() {
         isMoveRight = false;

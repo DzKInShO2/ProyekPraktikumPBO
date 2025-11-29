@@ -18,7 +18,7 @@ public class Gameplay extends JPanel {
         addKeyListener(input);
 
         this.level = level;
-        player = new Player(0, 0);
+        player = new Player(level, 0, 0);
 
         updateThread = new Thread() {
             public void run() {
@@ -31,8 +31,7 @@ public class Gameplay extends JPanel {
                         var deltaTime = currentTime - lastTime;
                         lastTime = currentTime;
 
-                        player.update((float)deltaTime * (float)1e-9, level);
-                        input.resetJump();
+                        player.update((float)deltaTime * (float)1e-9);
                     }
                 } catch (Exception e) {}
             }
