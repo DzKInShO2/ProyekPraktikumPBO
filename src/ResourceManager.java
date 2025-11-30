@@ -5,6 +5,8 @@ import java.awt.image.*;
 import javax.swing.*;
 import javax.imageio.*;
 
+import java.io.File;
+
 public class ResourceManager {
     public final int PLAYER_SIZE = 32;
     public final int TILE_SIZE = 16;
@@ -18,6 +20,9 @@ public class ResourceManager {
     private Image[] tiles;
     private Image[] player;
     private Image checkpoint;
+
+    private File walk;
+    private File jump;
 
     private int tileCountX;
     private int tileCountY;
@@ -45,6 +50,9 @@ public class ResourceManager {
             player[PLAYER_IDLE] = playerIdle;
 
             checkpoint = new ImageIcon("res/PixelAdventure1Free/Items/Checkpoints/End/End (Idle).png").getImage();
+
+            walk = new File("res/walk.wav");
+            jump = new File("res/jump.wav");
         } catch (Exception e) {}
 
     }
@@ -66,6 +74,14 @@ public class ResourceManager {
 
     public int getTileCountY() {
         return tileCountY;
+    }
+
+    public File getWalkClip() {
+        return walk;
+    }
+
+    public File getJumpClip() {
+        return jump;
     }
 
     public Image getCheckpoint() {

@@ -1,7 +1,11 @@
 import java.awt.*;
 
+import javax.sound.sampled.*;
+
 public class Player extends Entity {
     private int health;
+
+    private Clip walkClip;
 
     private float velocityY;
     private float velocityX;
@@ -22,18 +26,14 @@ public class Player extends Entity {
         velocityY = 0;
         velocityX = 0;
 
+        var res = ResourceManager.getInstance();
+        walkClip = SoundManager.getLoop(res.getWalkClip());
+
         this.finished = finished;
     }
 
     public int getHealth() {
         return health;
-    }
-
-    public void takeDamage(int damage) {
-        var healthNew = health - damage;
-        if (healthNew >= 0) {
-            health = healthNew;
-        }
     }
 
     public void update(float dt) {
@@ -65,9 +65,9 @@ public class Player extends Entity {
             if (!isOnAir) {
                 velocityY = tileSize * JUMP_FORCE;
 
-                // PLAY JUMP SFX
-                Sound.play("res/PixelAdventure1Free/Sound/jump.wav");
+                SoundManager.playOnce(res.getJumpClip());
             }
+
             input.resetJump();
         }
 
@@ -78,6 +78,14 @@ public class Player extends Entity {
         var directionX = input.getMoveRight() ? 1 : (input.getMoveLeft() ? -1 : 0);
         if (directionX != 0) {
             velocityX += SPEED * tileSize;
+
+            if (!isOnAir) {
+                SoundManager.play(walkClip);
+            } else {
+                SoundManager.stop(walkClip);
+            }
+        } else {
+            SoundManager.stop(walkClip);
         }
 
         if (velocityX > MAX_VELOCITY_X) {
@@ -94,16 +102,6 @@ public class Player extends Entity {
             isNextTileEmpty &= level.isTileEmpty(nextGridX, gridY - i);
         }
 
-        // ============ WALK SOUND (PLAY ONCE PER PRESS) ============
-        boolean isWalking = (directionX != 0) && !isOnAir;
-
-        // Jika mulai berjalan (transisi diam -> jalan), mainkan suara sekali
-        if (isWalking && !wasWalking) {
-            Sound.play("res/PixelAdventure1Free/Sound/walk.wav");
-        }
-
-        wasWalking = isWalking;
-
         if (isNextTileEmpty) {
             posX += velocityX * directionX * dt;
             if (posX < 0) posX = 0;
@@ -115,8 +113,17 @@ public class Player extends Entity {
 
         for (var i = 0; i < playerToTileRatio; i++) {
             if (level.getTile(gridX - i, gridY - playerToTileRatio) == -1) {
-                finished.finished();
+                finished.finished(-1);
             }
+        }
+
+        if (gridY >= level.getHeight()) {
+            gridX = 0;
+            gridY = 0;
+            posX = 0;
+            posY = 0;
+
+            health -= 1;
         }
     }
 

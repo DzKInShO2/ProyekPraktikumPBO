@@ -52,6 +52,10 @@ public class Level {
         return data[y][x];
     }
 
+    public int getHeight() {
+        return height;
+    }
+
     public boolean isTileEmpty(int x, int y) {
         if (x > width - 1|| x < 0) return false;
         if (y < 0 || y > height - 1) return true;

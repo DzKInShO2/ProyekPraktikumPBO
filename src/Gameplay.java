@@ -17,7 +17,7 @@ public class Gameplay extends JPanel {
 
         this.level = level;
         this.finished = finished;
-        player = new Player(level, () -> {
+        player = new Player(level, (code) -> {
             finished();
         }, 0, 0);
 
@@ -67,6 +67,6 @@ public class Gameplay extends JPanel {
         isUpdateRunning = false;
         isDrawRunning = false;
 
-        finished.finished();
+        finished.finished(0);
     }
 }
