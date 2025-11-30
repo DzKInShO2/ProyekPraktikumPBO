@@ -5,23 +5,27 @@ import javax.swing.*;
 public class Gameplay extends JPanel {
     private Level level;
     private Player player;
+    private Finished finished;
     private Thread updateThread;
     private Thread drawThread;
     private volatile boolean isDrawRunning;
     private volatile boolean isUpdateRunning;
 
-    public Gameplay(Level level) {
+    public Gameplay(Level level, Finished finished) {
         setFocusable(true);
         setRequestFocusEnabled(true);
 
-        var input = InputManager.getInstance();
-        addKeyListener(input);
-
         this.level = level;
-        player = new Player(level, 0, 0);
+        this.finished = finished;
+        player = new Player(level, () -> {
+            finished();
+        }, 0, 0);
 
         updateThread = new Thread() {
             public void run() {
+                var input = InputManager.getInstance();
+                addKeyListener(input);
+
                 isUpdateRunning = true;
 
                 long lastTime = System.nanoTime();
@@ -62,5 +66,7 @@ public class Gameplay extends JPanel {
     private void finished() {
         isUpdateRunning = false;
         isDrawRunning = false;
+
+        finished.finished();
     }
 }

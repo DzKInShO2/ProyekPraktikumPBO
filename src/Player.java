@@ -14,16 +14,15 @@ public class Player extends Entity {
 
     private final int CAMERA_OFFSET = 300;
 
-    // === SOUND CONTROL ===
-    private long lastWalkSoundTime = 0;
-    private final long WALK_SOUND_INTERVAL = 150; // ms (0.15 detik)
-    private boolean wasWalking = false;
+    private Finished finished;
 
-    public Player(Level level, int x, int y) {
+    public Player(Level level, Finished finished, int x, int y) {
         super(level, x, y);
 
         velocityY = 0;
         velocityX = 0;
+
+        this.finished = finished;
     }
 
     public int getHealth() {
@@ -112,6 +111,12 @@ public class Player extends Entity {
             gridX = (int)Math.round(posX / tileSize);
 
             level.setOffset(posX - CAMERA_OFFSET);
+        }
+
+        for (var i = 0; i < playerToTileRatio; i++) {
+            if (level.getTile(gridX - i, gridY - playerToTileRatio) == -1) {
+                finished.finished();
+            }
         }
     }
 

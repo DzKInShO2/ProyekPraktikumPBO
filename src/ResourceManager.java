@@ -9,6 +9,7 @@ public class ResourceManager {
     public final int PLAYER_SIZE = 32;
     public final int TILE_SIZE = 16;
     public final int TILE_TO_SCREEN = 4;
+    public final int CHECKPOINT_SIZE = 64;
 
     public final int PLAYER_IDLE = 0;
 
@@ -16,6 +17,7 @@ public class ResourceManager {
 
     private Image[] tiles;
     private Image[] player;
+    private Image checkpoint;
 
     private int tileCountX;
     private int tileCountY;
@@ -41,6 +43,8 @@ public class ResourceManager {
                 .getSubimage(0, 0, PLAYER_SIZE, PLAYER_SIZE);
 
             player[PLAYER_IDLE] = playerIdle;
+
+            checkpoint = new ImageIcon("res/PixelAdventure1Free/Items/Checkpoints/End/End (Idle).png").getImage();
         } catch (Exception e) {}
 
     }
@@ -62,6 +66,10 @@ public class ResourceManager {
 
     public int getTileCountY() {
         return tileCountY;
+    }
+
+    public Image getCheckpoint() {
+        return checkpoint;
     }
 
     public Image getPlayer(int mode) {
