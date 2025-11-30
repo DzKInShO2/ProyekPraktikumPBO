@@ -14,6 +14,11 @@ public class Player extends Entity {
 
     private final int CAMERA_OFFSET = 300;
 
+    // === SOUND CONTROL ===
+    private long lastWalkSoundTime = 0;
+    private final long WALK_SOUND_INTERVAL = 150; // ms (0.15 detik)
+    private boolean wasWalking = false;
+
     public Player(Level level, int x, int y) {
         super(level, x, y);
 
@@ -60,6 +65,9 @@ public class Player extends Entity {
         if (input.getJump()) {
             if (!isOnAir) {
                 velocityY = tileSize * JUMP_FORCE;
+
+                // PLAY JUMP SFX
+                Sound.play("res/PixelAdventure1Free/Sound/jump.wav");
             }
             input.resetJump();
         }
@@ -86,6 +94,16 @@ public class Player extends Entity {
         for (var i = 0; i <= playerToTileRatio; i++) {
             isNextTileEmpty &= level.isTileEmpty(nextGridX, gridY - i);
         }
+
+        // ============ WALK SOUND (PLAY ONCE PER PRESS) ============
+        boolean isWalking = (directionX != 0) && !isOnAir;
+
+        // Jika mulai berjalan (transisi diam -> jalan), mainkan suara sekali
+        if (isWalking && !wasWalking) {
+            Sound.play("res/PixelAdventure1Free/Sound/walk.wav");
+        }
+
+        wasWalking = isWalking;
 
         if (isNextTileEmpty) {
             posX += velocityX * directionX * dt;
