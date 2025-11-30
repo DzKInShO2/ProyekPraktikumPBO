@@ -113,6 +113,7 @@ public class Player extends Entity {
 
         for (var i = 0; i < playerToTileRatio; i++) {
             if (level.getTile(gridX - i, gridY - playerToTileRatio) == -1) {
+                SoundManager.stop(walkClip);
                 finished.finished(-1);
             }
         }

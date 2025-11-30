@@ -1,43 +1,69 @@
+import javax.swing.*;
 import java.awt.event.*;
 
-public class InputManager extends KeyAdapter {
+public class InputManager {
     private static volatile InputManager instance;
 
     private volatile boolean isMoveRight;
     private volatile boolean isMoveLeft;
     private volatile boolean isJump;
 
+    private Action moveX;
+    private Action stillX;
+    private Action jumpY;
+
     private InputManager() {
         isMoveRight = false;
         isMoveLeft = false;
         isJump = false;
-    }
 
-    public void keyPressed(KeyEvent e) {
-        var keyCode = e.getKeyCode();
-        if (keyCode == KeyEvent.VK_D) {
-            isMoveRight = true;
-        } else if (keyCode == KeyEvent.VK_A) {
-            isMoveLeft = true;
-        } else if (keyCode == KeyEvent.VK_SPACE) {
-            isJump = true;
-        }
-    }
+        moveX = new AbstractAction() {
+            public void actionPerformed(ActionEvent e) {
+                var key = e.getActionCommand().charAt(0);
+                if (key == 'd') {
+                    isMoveRight = true;
+                } else if (key == 'a') {
+                    isMoveLeft = true;
+                }
+            }
+        };
 
-    public void keyReleased(KeyEvent e) {
-        var keyCode = e.getKeyCode();
-        if (keyCode == KeyEvent.VK_D) {
-            isMoveRight = false;
-        } else if (keyCode == KeyEvent.VK_A) {
-            isMoveLeft = false;
-        }
+        stillX = new AbstractAction() {
+            public void actionPerformed(ActionEvent e) {
+                var key = e.getActionCommand().charAt(0);
+                if (key == 'd') {
+                    isMoveRight = false;
+                } else if (key == 'a') {
+                    isMoveLeft = false;
+                }
+            }
+        };
+
+        jumpY = new AbstractAction() {
+            public void actionPerformed(ActionEvent e) {
+                isJump = true;
+            }
+        };
     }
 
     public static InputManager getInstance() {
         if (instance == null) {
             instance = new InputManager();
         }
+
         return instance;
+    }
+
+    public Action getActionMoveX() {
+        return moveX;
+    }
+
+    public Action getActionStillX() {
+        return stillX;
+    }
+
+    public Action getActionJumpY() {
+        return jumpY;
     }
 
     public boolean getMoveRight() {

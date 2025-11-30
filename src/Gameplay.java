@@ -3,29 +3,26 @@ import java.awt.event.*;
 import javax.swing.*;
 
 public class Gameplay extends JPanel {
+    private int ilevel;
     private Level level;
     private Player player;
+
     private Finished finished;
     private Thread updateThread;
     private Thread drawThread;
     private volatile boolean isDrawRunning;
     private volatile boolean isUpdateRunning;
 
-    public Gameplay(Level level, Finished finished) {
-        setFocusable(true);
-        setRequestFocusEnabled(true);
+    public Gameplay(int level, Finished finished) {
+        var res = ResourceManager.getInstance();
+        this.level = res.getLevel(ilevel = level);
 
-        this.level = level;
-        this.finished = finished;
-        player = new Player(level, (code) -> {
+        player = new Player(this.level, (code) -> {
             finished();
         }, 0, 0);
 
         updateThread = new Thread() {
             public void run() {
-                var input = InputManager.getInstance();
-                addKeyListener(input);
-
                 isUpdateRunning = true;
 
                 long lastTime = System.nanoTime();
@@ -37,7 +34,7 @@ public class Gameplay extends JPanel {
 
                         player.update((float)deltaTime * (float)1e-9);
                     }
-                } catch (Exception e) {}
+                } catch (Exception e) {} 
             }
         };
 
@@ -53,8 +50,6 @@ public class Gameplay extends JPanel {
 
         updateThread.start();
         drawThread.start();
-
-        requestFocus();
     }
 
     protected void paintComponent(Graphics g) {
@@ -67,6 +62,20 @@ public class Gameplay extends JPanel {
         isUpdateRunning = false;
         isDrawRunning = false;
 
-        finished.finished(0);
+        var res = ResourceManager.getInstance();
+        var nextLevel = res.getLevel(++ilevel);
+        if (nextLevel != null) {
+            var rootPane = getRootPane().getContentPane();
+
+            rootPane.removeAll();
+
+            var gameplay = new Gameplay(ilevel, finished);
+            rootPane.add(gameplay);
+
+            rootPane.revalidate();
+            rootPane.repaint();
+        } else {
+            finished.finished(0);
+        }
     }
 }
