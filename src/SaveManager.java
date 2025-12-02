@@ -80,6 +80,8 @@ public class SaveManager {
             statement.setDouble(1, (double)x);
             statement.setDouble(2, (double)y);
             statement.execute();
-        } catch (SQLException e) {}
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 }

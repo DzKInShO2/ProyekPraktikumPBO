@@ -1,21 +1,76 @@
+import java.awt.*;
 import javax.swing.*;
 
 public class Main {
-
-    public enum GameState {
-        MENU,
-        PLAY,
-        FINISHED
+    public static void switchPanel(Container pane, JPanel panel) {
+        pane.removeAll();
+        pane.add(panel);
+        pane.revalidate();
+        pane.repaint();
+        panel.requestFocusInWindow();
     }
 
-    public static GameState state = GameState.MENU;
+    public static MenuPanel createMenuPanel(Container pane) {
+        // Aksi yang akan dilakukan pas gameplay selesai
+        Finished finished = (code) -> {
+            if (code == 0) {
+                switchPanel(pane, createMenuPanel(pane));
+            } else if (code == 1) {
+                switchPanel(pane, new WinPanel(() -> {
+                    switchPanel(pane, createMenuPanel(pane));
+                }));
+            }
+        };
 
-    public static void switchPanel(JFrame frame, JPanel panel) {
-        frame.getContentPane().removeAll();
-        frame.getContentPane().add(panel);
-        frame.revalidate();
-        frame.repaint();
-        panel.requestFocusInWindow();
+        return new MenuPanel(
+                // CONTINUE
+                () -> {
+                    var fc = new JFileChooser();
+                    if (fc.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+                        var path = fc.getSelectedFile().getAbsolutePath();
+                        if (SaveManager.initialize(path, false)) {
+                            var level = SaveManager.getLevel();
+                            var x = (float)SaveManager.getPositionX();
+                            var y = (float)SaveManager.getPositionY();
+
+                            var gameplay = new Gameplay(level, x, y, finished);
+                            switchPanel(pane, gameplay);
+                        } else {
+                            JOptionPane.showMessageDialog(pane, 
+                                    "File save tidak valid!",
+                                    "Save File Error",
+                                    JOptionPane.ERROR_MESSAGE
+                                    );
+                        }
+                    }
+                },
+
+            // NEW GAME
+            () -> {
+                var fc = new JFileChooser();
+                if (fc.showSaveDialog(null) == JFileChooser.APPROVE_OPTION) {
+                    var path = fc.getSelectedFile().getAbsolutePath();
+                    if (SaveManager.initialize(path, true)) {
+                        var gameplay = new Gameplay(0, 0, 0, finished);
+                        switchPanel(pane, gameplay);
+                    }
+                }
+            },
+
+            // SETTINGS
+            () -> {
+                JOptionPane.showMessageDialog(pane, 
+                        "Settings belum dibuat\nTapi tombol ini sudah aktif!",
+                        "Settings",
+                        JOptionPane.INFORMATION_MESSAGE
+                        );
+            },
+
+            // EXIT
+            () -> {
+                System.exit(0);
+            }
+        );
     }
 
     public static void main(String[] args) {
@@ -32,6 +87,7 @@ public class Main {
             var input = InputManager.getInstance();
 
             var rootPane = app.getRootPane();
+            var contentPane = app.getContentPane();
             var inputMap = rootPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
             var actionMap = rootPane.getActionMap();
 
@@ -46,57 +102,8 @@ public class Main {
             actionMap.put("jumpY", input.getActionJumpY());
 
             // 2. CREATE MENU PANEL DENGAN CALLBACK 4 TOMBOL
-            MenuPanel menu = new MenuPanel(
-                // CONTINUE
-                () -> {
-                    var fc = new JFileChooser();
-                    if (fc.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
-                        var path = fc.getSelectedFile().getAbsolutePath();
-                        if (SaveManager.initialize(path, false)) {
-                            var level = SaveManager.getLevel();
-                            var x = (float)SaveManager.getPositionX();
-                            var y = (float)SaveManager.getPositionY();
-
-                            var gameplay = new Gameplay(level, x, y, (code) -> {});
-                            switchPanel(app, gameplay);
-                        } else {
-                            JOptionPane.showMessageDialog(app, 
-                                "File save tidak valid!",
-                                "Save File Error",
-                                JOptionPane.ERROR_MESSAGE
-                            );
-                        }
-                    }
-                },
-
-                // NEW GAME
-                () -> {
-                    var fc = new JFileChooser();
-                    if (fc.showSaveDialog(null) == JFileChooser.APPROVE_OPTION) {
-                        var path = fc.getSelectedFile().getAbsolutePath();
-                        if (SaveManager.initialize(path, true)) {
-                            var gameplay = new Gameplay(0, 0, 0, (code) -> {});
-                            switchPanel(app, gameplay);
-                        }
-                    }
-                },
-
-                // SETTINGS
-                () -> {
-                    JOptionPane.showMessageDialog(app, 
-                        "Settings belum dibuat\nTapi tombol ini sudah aktif!",
-                        "Settings",
-                        JOptionPane.INFORMATION_MESSAGE
-                    );
-                },
-
-                // EXIT
-                () -> {
-                    System.exit(0);
-                }
-            );
-
-            switchPanel(app, menu);
+            var menu = createMenuPanel(contentPane);
+            switchPanel(contentPane, menu);
         });
     }
 }

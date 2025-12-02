@@ -7,8 +7,6 @@ public class MenuPanel extends JPanel {
     private Image bg;
 
     private Image[] buttons = new Image[4];
-    private String[] names = {"Continue", "NewGame", "Settings", "Exit"};
-
     private Runnable[] callbacks = new Runnable[4];
 
     private final float SCALE = 0.6f;

@@ -12,34 +12,74 @@ public class Gameplay extends JPanel {
     private Thread drawThread;
     private volatile boolean isDrawRunning;
     private volatile boolean isUpdateRunning;
+    private boolean isPaused;
 
     public Gameplay(int level, float x, float y, Finished finished) {
+        setLayout(new BorderLayout(0, 0));
+
         SaveManager.setLevel(level);
         SaveManager.setPosition(x, y);
 
         var res = ResourceManager.getInstance();
         this.level = res.getLevel(ilevel = level);
+        this.finished = finished;
 
+        isPaused = false;
         player = new Player(this.level, (code) -> {
-            finished();
-        }, x, x);
+            if (code == 0) {
+                finished();
+            } 
+        }, x, y);
 
-        updateThread = new Thread() {
-            public void run() {
-                isUpdateRunning = true;
+        var levelLabel = new JLabel(String.format("Level %d", level + 1));
+        levelLabel.setFont(res.getFont());
 
-                long lastTime = System.nanoTime();
-                try {
-                    while (isUpdateRunning) {
-                        var currentTime = System.nanoTime();
-                        var deltaTime = currentTime - lastTime;
-                        lastTime = currentTime;
+        add(levelLabel, BorderLayout.NORTH);
 
-                        player.update((float)deltaTime * (float)1e-9);
-                    }
-                } catch (Exception e) {} 
-            }
+        var pausePanel = new JPanel();
+        pausePanel.setOpaque(true);
+        pausePanel.setLayout(new GridBagLayout());
+        {
+            pausePanel.setBackground(new Color(0, 0, 0, 160));
+
+            var pauseLabel = new JLabel("Paused.");
+            pauseLabel.setFont(res.getFont());
+            pauseLabel.setForeground(Color.GRAY);
+
+            var continueLabel = new JLabel("Tekan [Enter] untuk lanjut");
+            continueLabel.setFont(res.getFont().deriveFont(24f));
+            continueLabel.setForeground(Color.GRAY.brighter());
+
+            var backLabel = new JLabel("Tekan [Escape] untuk kembali ke Menu Utama");
+            backLabel.setFont(res.getFont().deriveFont(24f));
+            backLabel.setForeground(Color.GRAY.brighter());
+
+            var c = new GridBagConstraints();
+            pausePanel.add(pauseLabel);
+
+            c.gridy = 1;
+            pausePanel.add(continueLabel, c);
+
+            c.gridy = 2;
+            pausePanel.add(backLabel, c);
+        }
+
+        Runnable update = () -> {
+            isUpdateRunning = true;
+
+            long lastTime = System.nanoTime();
+            try {
+                while (isUpdateRunning) {
+                    var currentTime = System.nanoTime();
+                    var deltaTime = currentTime - lastTime;
+                    lastTime = currentTime;
+
+                    player.update((float)deltaTime * (float)1e-9);
+                }
+            } catch (Exception e) {} 
         };
+
+        updateThread = new Thread(update);
 
         drawThread = new Thread(() -> { 
             isDrawRunning = true;
@@ -53,6 +93,34 @@ public class Gameplay extends JPanel {
 
         updateThread.start();
         drawThread.start();
+
+        addKeyListener(new KeyAdapter() {
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
+                    if (isPaused) {
+                        SaveManager.setLevel(level);
+                        SaveManager.setPosition(player.posX, player.posY);
+                        finished.finished(0);
+                    }
+
+                    isPaused = true;
+                    isUpdateRunning = false;
+
+                    add(pausePanel);
+                    revalidate();
+                }
+
+                if (e.getKeyCode() == KeyEvent.VK_ENTER && isPaused) {
+                    isPaused = false;
+
+                    remove(pausePanel);
+                    revalidate();
+
+                    updateThread = new Thread(update);
+                    updateThread.start();
+                }
+            }
+        });
     }
 
     protected void paintComponent(Graphics g) {
@@ -78,7 +146,7 @@ public class Gameplay extends JPanel {
             rootPane.revalidate();
             rootPane.repaint();
         } else {
-            finished.finished(0);
+            finished.finished(1);
         }
     }
 }

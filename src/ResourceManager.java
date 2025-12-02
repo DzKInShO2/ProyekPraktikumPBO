@@ -1,4 +1,6 @@
 import java.io.*;
+import java.nio.file.*;
+
 import java.awt.*;
 import java.awt.image.*;
 
@@ -20,9 +22,11 @@ public class ResourceManager {
 
     private static ResourceManager instance;
 
+    private Font font;
     private Image[] tiles;
     private AnimationClip[] player;
     private Image checkpoint;
+    private ImageIcon blueBackground;
 
     private File walk;
     private File jump;
@@ -49,10 +53,13 @@ public class ResourceManager {
             player[PLAYER_FALL] = new AnimationClip(getSubimages(playerFallSheet, PLAYER_SIZE, PLAYER_SIZE), 12);
 
             checkpoint = new ImageIcon("res/PixelAdventure1Free/Items/Checkpoints/End/End (Idle).png").getImage();
+            blueBackground = new ImageIcon("res/PixelAdventure1Free/Background/Blue.png");
 
             walk = new File("res/walk.wav");
             jump = new File("res/jump.wav");
 
+            var fontFile = Paths.get("res/BungeeSpice-Regular.ttf").normalize().toFile();
+            font = Font.createFont(Font.TRUETYPE_FONT, fontFile).deriveFont(32f);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -131,6 +138,14 @@ public class ResourceManager {
             instance.initLevels();
         }
         return instance;
+    }
+
+    public Font getFont() {
+        return font;
+    }
+
+    public ImageIcon getBlueBackground() {
+        return blueBackground;
     }
 
     public Image getTile(int i) {
