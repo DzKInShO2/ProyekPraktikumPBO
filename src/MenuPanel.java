@@ -9,15 +9,15 @@ public class MenuPanel extends JPanel {
     private Image[] buttons = new Image[4];
     private Runnable[] callbacks = new Runnable[4];
 
-    private final float SCALE = 0.6f;
-    private final float SCALE_HOVER = 0.7f;
+    private final float SCALE = 0.3f;
+    private final float SCALE_HOVER = 0.4f;
 
     private float[] currentScale = {SCALE, SCALE, SCALE, SCALE};
 
     private int hoveredIndex = -1;
 
-    private final int START_Y = 240;
-    private final int GAP = 90;
+    private final int START_Y = 370;
+    private final int GAP = 60;
 
     public MenuPanel(Runnable onContinue, Runnable onNewGame, Runnable onSettings, Runnable onExit) {
 

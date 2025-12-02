@@ -100,6 +100,7 @@ public class Gameplay extends JPanel {
                     if (isPaused) {
                         SaveManager.setLevel(level);
                         SaveManager.setPosition(player.posX, player.posY);
+                        SoundManager.stopAllSFX(); // Stop SFX saat kembali ke menu
                         finished.finished(0);
                     }
 
@@ -132,6 +133,9 @@ public class Gameplay extends JPanel {
     private void finished() {
         isUpdateRunning = false;
         isDrawRunning = false;
+
+        // Stop semua SFX sebelum pindah level/menu
+        SoundManager.stopAllSFX();
 
         var res = ResourceManager.getInstance();
         var nextLevel = res.getLevel(++ilevel);

@@ -1,9 +1,8 @@
 import java.awt.*;
-
 import javax.sound.sampled.*;
 
 public class Player extends Entity {
-    private Clip walkClip;
+
     private AnimationClip animClip;
 
     private boolean isFlipped;
@@ -12,15 +11,16 @@ public class Player extends Entity {
     private float velocityX;
     private float velocityY;
     private final float GRAVITY = 9.8f;
-    private final float FRICTION = 2.0f;
-
     private final float SPEED = 10.0f;
     private final float JUMP_FORCE = 7.0f;
-    private final float MAX_VELOCITY_X = SPEED * 50;
 
     private final int CAMERA_OFFSET = 300;
 
     private Finished finished;
+
+    // Timer untuk langkah kaki
+    private float walkTimer = 0f;
+    private final float WALK_INTERVAL = 0.25f;
 
     public Player(Level level, Finished finished, float x, float y) {
         super(level, x, y);
@@ -31,7 +31,6 @@ public class Player extends Entity {
         isFlipped = false;
 
         var res = ResourceManager.getInstance();
-        walkClip = SoundManager.getLoop(res.getWalkClip());
         animClip = res.getPlayer(res.PLAYER_IDLE);
 
         this.finished = finished;
@@ -46,115 +45,141 @@ public class Player extends Entity {
         var input = InputManager.getInstance();
         var direction = input.getMoveRight() ? 1 : (input.getMoveLeft() ? -1 : 0);
 
+        // Flip berdasarkan arah karakter
         if (direction != 0) {
             isFlipped = direction < 0;
         }
 
+        // Jump
         if (isOnGround && input.getJump()) {
             velocityY += JUMP_FORCE;
-
             SoundManager.playOnce(res.getJumpClip());
             input.resetJump();
         }
 
+        // Physics
         velocityY -= GRAVITY * dt;
         velocityX = direction * SPEED;
+
+        // ANIMASI + SFX FOOTSTEP
         if (isOnGround) {
             if (velocityX != 0) {
                 var runClip = res.getPlayer(res.PLAYER_RUN);
                 if (animClip != runClip) {
                     runClip.reset();
                     animClip = runClip;
+                    walkTimer = 0; // reset timer saat ganti animasi
                 }
-                SoundManager.play(walkClip);
-            } else if (velocityX == 0) {
+
+                // Footstep SFX setiap WALK_INTERVAL detik
+                walkTimer += dt;
+                if (walkTimer >= WALK_INTERVAL) {
+                    walkTimer -= WALK_INTERVAL; 
+                    SoundManager.playWalkSound(res.getWalkClip());
+                }
+
+            } else {
+                // STOP walk sound saat berhenti
+                SoundManager.stopWalkSound();
+                
                 var idleClip = res.getPlayer(res.PLAYER_IDLE);
                 if (animClip != idleClip) {
                     idleClip.reset();
                     animClip = idleClip;
                 }
-
-                SoundManager.stop(walkClip);
+                walkTimer = 0; 
             }
-        } else if (!isOnGround) {
-            SoundManager.stop(walkClip);
+        } 
+        else { 
+            // STOP walk sound saat di udara
+            SoundManager.stopWalkSound();
+            walkTimer = 0;
 
             if (velocityY > 0) {
-                var jumpClip = res.getPlayer(res.PLAYER_JUMP);
-                if (animClip != jumpClip) {
-                    animClip = jumpClip;
-                }
-            } else if (velocityY < 0) {
-                var fallClip = res.getPlayer(res.PLAYER_FALL);
-                if (animClip != fallClip) {
-                    animClip = fallClip;
-                }
+                animClip = res.getPlayer(res.PLAYER_JUMP);
+            } else {
+                animClip = res.getPlayer(res.PLAYER_FALL);
             }
         }
 
+        // Collision + movement
         var newPosX = posX + velocityX * dt;
         var newPosY = posY - velocityY * dt;
-        if (velocityX <= 0) {
+
+        // Collision horizontal
+        if (velocityX < 0) { 
             if (level.getTile(newPosX, posY) > 0 || level.getTile(newPosX, posY + 0.9f) > 0) {
                 newPosX = (int)newPosX + 1;
                 velocityX = 0;
             }
-        } else {
-            if (level.getTile(newPosX + pttr, posY) > 0 || level.getTile(newPosX + pttr, posY + 0.9f) > 0) {
-                newPosX = (int)newPosX;
+        } else if (velocityX > 0) { 
+            float rightEdge = newPosX + pttr;
+            int tileRight = (int)rightEdge;
+            
+            if (level.getTile(tileRight, (int)posY) > 0 || 
+                level.getTile(tileRight, (int)(posY + 0.9f)) > 0) {
+                newPosX = tileRight - pttr;
                 velocityX = 0;
             }
         }
 
-        if (velocityY <= 0) {
-            if (level.getTile(newPosX + 1.9f, newPosY + pttr) > 0 || level.getTile(newPosX, newPosY + pttr) > 0) {
-                newPosY = (int)newPosY;
+        // Collision vertical - perbaiki agar tidak menyebabkan slowdown setelah jump
+        boolean wasOnGround = isOnGround;
+        isOnGround = false; // reset dulu
+        
+        if (velocityY <= 0) { // Jatuh atau di ground
+            // Cek collision di bawah
+            float bottomY = newPosY + pttr;
+            int tileBottom = (int)bottomY;
+            
+            if (level.getTile((int)(newPosX + 0.1f), tileBottom) > 0 ||
+                level.getTile((int)(newPosX + pttr - 0.1f), tileBottom) > 0) {
+                newPosY = tileBottom - pttr;
                 velocityY = 0;
-
                 isOnGround = true;
             }
-        } else {
-            if (level.getTile(newPosX + 1.9f, newPosY) > 0 || level.getTile(newPosX, newPosY) > 0) {
-                newPosY = (int)newPosY;
+        } else { // Naik (jump)
+            // Cek collision di atas
+            int tileTop = (int)newPosY;
+            
+            if (level.getTile((int)(newPosX + 0.1f), tileTop) > 0 ||
+                level.getTile((int)(newPosX + pttr - 0.1f), tileTop) > 0) {
+                newPosY = tileTop + 1;
                 velocityY = 0;
             }
-
-            isOnGround = false;
         }
 
         posX = newPosX;
         posY = newPosY;
 
+        // Reset jika jatuh
         if (posY > level.getHeight()) {
             posX = posY = 0;
             velocityX = velocityY = 0;
         }
 
+        // Checkpoint
         if (level.isInCheckpoint(posX, posY)) {
             finished.finished(0);
         }
 
         level.setOffset((posX * tileSize) - CAMERA_OFFSET);
         animClip.update(dt);
-        System.out.printf("\033[s\033[u", velocityY);
     }
 
     public void draw(Graphics g) {
         var res = ResourceManager.getInstance();
-
         var playerSize = res.PLAYER_SIZE * res.TILE_TO_SCREEN;
         var tileSize = res.TILE_SIZE * res.TILE_TO_SCREEN;
 
         if (isFlipped) {
-            g.drawImage(animClip.getFrame(), 
-                    CAMERA_OFFSET + playerSize, (int)(posY * tileSize),
-                    -playerSize, playerSize,
-                    null);
+            g.drawImage(animClip.getFrame(),
+                CAMERA_OFFSET + playerSize, (int)(posY * tileSize),
+                -playerSize, playerSize, null);
         } else {
-            g.drawImage(animClip.getFrame(), 
-                    CAMERA_OFFSET, (int)(posY * tileSize),
-                    playerSize, playerSize,
-                    null);
+            g.drawImage(animClip.getFrame(),
+                CAMERA_OFFSET, (int)(posY * tileSize),
+                playerSize, playerSize, null);
         }
     }
 }
