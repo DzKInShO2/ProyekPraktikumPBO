@@ -66,7 +66,7 @@ public class Player extends Entity {
         var newPosY = posY - velocityY * dt;
         if (velocityX <= 0) {
             if (level.getTile(newPosX, posY) > 0 || level.getTile(newPosX, posY + 0.9f) > 0) {
-                newPosX = (int)newPosX;
+                newPosX = (int)newPosX + 1;
                 velocityX = 0;
             }
         } else {
@@ -77,14 +77,14 @@ public class Player extends Entity {
         }
 
         if (velocityY <= 0) {
-            if (level.getTile(newPosX, posY + pttr) > 0 || level.getTile(newPosX, posY + pttr) > 0) {
+            if (level.getTile(newPosX + 1.9f, newPosY + pttr) > 0 || level.getTile(newPosX, newPosY + pttr) > 0) {
                 newPosY = (int)newPosY;
                 velocityY = 0;
 
                 isOnGround = true;
             }
         } else {
-            if (level.getTile(newPosX, posY) > 0 || level.getTile(newPosX, posY) > 0) {
+            if (level.getTile(newPosX + 1.9f, newPosY) > 0 || level.getTile(newPosX, newPosY) > 0) {
                 newPosY = (int)newPosY;
                 velocityY = 0;
             }
