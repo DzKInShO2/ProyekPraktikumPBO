@@ -3,8 +3,6 @@ import java.awt.*;
 import javax.sound.sampled.*;
 
 public class Player extends Entity {
-    private int health;
-
     private Clip walkClip;
     private AnimationClip animClip;
 
@@ -37,10 +35,6 @@ public class Player extends Entity {
         animClip = res.getPlayer(res.PLAYER_IDLE);
 
         this.finished = finished;
-    }
-
-    public int getHealth() {
-        return health;
     }
 
     public void update(float dt) {
