@@ -71,14 +71,14 @@ public class Player extends Entity {
         }
 
         if (velocityY <= 0) {
-            if (level.getTile(newPosX, posY + pttr) > 0 || level.getTile(newPosX + pttr, posY + pttr) > 0) {
+            if (level.getTile(newPosX, posY + pttr) > 0 || level.getTile(newPosX, posY + pttr) > 0) {
                 newPosY = (int)newPosY;
                 velocityY = 0;
 
                 isOnGround = true;
             }
         } else {
-            if (level.getTile(newPosX, posY) > 0 || level.getTile(newPosX + pttr, posY) > 0) {
+            if (level.getTile(newPosX, posY) > 0 || level.getTile(newPosX, posY) > 0) {
                 newPosY = (int)newPosY;
                 velocityY = 0;
             }
