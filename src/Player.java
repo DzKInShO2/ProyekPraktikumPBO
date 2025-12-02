@@ -24,7 +24,7 @@ public class Player extends Entity {
 
     private Finished finished;
 
-    public Player(Level level, Finished finished, int x, int y) {
+    public Player(Level level, Finished finished, float x, float y) {
         super(level, x, y);
 
         velocityX = 0;
@@ -83,6 +83,8 @@ public class Player extends Entity {
                 SoundManager.stop(walkClip);
             }
         } else if (!isOnGround) {
+            SoundManager.stop(walkClip);
+
             if (velocityY > 0) {
                 var jumpClip = res.getPlayer(res.PLAYER_JUMP);
                 if (animClip != jumpClip) {

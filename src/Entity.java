@@ -6,7 +6,7 @@ public abstract class Entity {
 
     protected Level level;
 
-    public Entity(Level level, int x, int y) {
+    public Entity(Level level, float x, float y) {
         this.level = level;
 
         posX = x;

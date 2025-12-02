@@ -13,13 +13,16 @@ public class Gameplay extends JPanel {
     private volatile boolean isDrawRunning;
     private volatile boolean isUpdateRunning;
 
-    public Gameplay(int level, Finished finished) {
+    public Gameplay(int level, float x, float y, Finished finished) {
+        SaveManager.setLevel(level);
+        SaveManager.setPosition(x, y);
+
         var res = ResourceManager.getInstance();
         this.level = res.getLevel(ilevel = level);
 
         player = new Player(this.level, (code) -> {
             finished();
-        }, 0, 0);
+        }, x, x);
 
         updateThread = new Thread() {
             public void run() {
@@ -69,7 +72,7 @@ public class Gameplay extends JPanel {
 
             rootPane.removeAll();
 
-            var gameplay = new Gameplay(ilevel, finished);
+            var gameplay = new Gameplay(ilevel, 0, 0, finished);
             rootPane.add(gameplay);
 
             rootPane.revalidate();

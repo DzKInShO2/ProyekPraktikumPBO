@@ -46,22 +46,39 @@ public class Main {
             actionMap.put("jumpY", input.getActionJumpY());
 
             // 2. CREATE MENU PANEL DENGAN CALLBACK 4 TOMBOL
-
             MenuPanel menu = new MenuPanel(
-
                 // CONTINUE
                 () -> {
-                    // Continue = lanjutkan level terakhir (sementara level 0)
-                    // Perlu di ubah di sini untuk saveManagernya terpakai atau endaknya hehe @dzaka
-                    Gameplay gameplay = new Gameplay(0, (code) -> {});
-                    switchPanel(app, gameplay);
+                    var fc = new JFileChooser();
+                    if (fc.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+                        var path = fc.getSelectedFile().getAbsolutePath();
+                        if (SaveManager.initialize(path, false)) {
+                            var level = SaveManager.getLevel();
+                            var x = (float)SaveManager.getPositionX();
+                            var y = (float)SaveManager.getPositionY();
+
+                            var gameplay = new Gameplay(level, x, y, (code) -> {});
+                            switchPanel(app, gameplay);
+                        } else {
+                            JOptionPane.showMessageDialog(app, 
+                                "File save tidak valid!",
+                                "Save File Error",
+                                JOptionPane.ERROR_MESSAGE
+                            );
+                        }
+                    }
                 },
 
                 // NEW GAME
                 () -> {
-                    // New game = mulai level 0
-                    Gameplay gameplay = new Gameplay(0, (code) -> {});
-                    switchPanel(app, gameplay);
+                    var fc = new JFileChooser();
+                    if (fc.showSaveDialog(null) == JFileChooser.APPROVE_OPTION) {
+                        var path = fc.getSelectedFile().getAbsolutePath();
+                        if (SaveManager.initialize(path, true)) {
+                            var gameplay = new Gameplay(0, 0, 0, (code) -> {});
+                            switchPanel(app, gameplay);
+                        }
+                    }
                 },
 
                 // SETTINGS
