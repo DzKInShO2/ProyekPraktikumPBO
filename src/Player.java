@@ -50,11 +50,17 @@ public class Player extends Entity {
 
         if (isOnGround && input.getJump()) {
             velocityY += JUMP_FORCE;
+            SoundManager.playOnce(res.getJumpClip());
             input.resetJump();
         }
 
         velocityY -= GRAVITY * dt;
         velocityX = direction * SPEED;
+        if (isOnGround && velocityX != 0) {
+            SoundManager.play(walkClip);
+        } else {
+            SoundManager.stop(walkClip);
+        }
 
         var newPosX = posX + velocityX * dt;
         var newPosY = posY - velocityY * dt;
@@ -88,6 +94,11 @@ public class Player extends Entity {
 
         posX = newPosX;
         posY = newPosY;
+
+        if (posY > level.getHeight()) {
+            posX = posY = 0;
+            velocityX = velocityY = 0;
+        }
 
         if (level.isInCheckpoint(posX, posY)) {
             finished.finished(0);
