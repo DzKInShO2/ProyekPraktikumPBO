@@ -33,9 +33,6 @@ public class ResourceManager {
 
     private Level[] levels;
 
-    private int tileCountX;
-    private int tileCountY;
-
     private ResourceManager() {
         try {
             var tileset = ImageIO.read(new File("res/PixelAdventure1Free/Terrain/Terrain (16x16).png"));
@@ -150,14 +147,6 @@ public class ResourceManager {
 
     public Image getTile(int i) {
         return tiles[i];
-    }
-
-    public int getTileCountX() {
-        return tileCountX;
-    }
-
-    public int getTileCountY() {
-        return tileCountY;
     }
 
     public File getWalkClip() {

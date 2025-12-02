@@ -10,6 +10,7 @@ public class Player extends Entity {
 
     private float velocityX;
     private float velocityY;
+
     private final float GRAVITY = 9.8f;
     private final float SPEED = 10.0f;
     private final float JUMP_FORCE = 7.0f;
