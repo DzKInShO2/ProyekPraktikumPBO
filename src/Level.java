@@ -6,6 +6,9 @@ public class Level {
     private int width;
     private int height;
 
+    private int goalGridX;
+    private int goalGridY;
+
     private float offsetX;
     private Image image;
 
@@ -38,6 +41,9 @@ public class Level {
                             x * tileSize, y * tileSize,
                             checkpointSize, checkpointSize, 
                             null);
+
+                    goalGridX = x;
+                    goalGridY = y;
                 }
             }
         }
@@ -45,22 +51,29 @@ public class Level {
         image = (Image)buffer;
     }
 
-    public int getTile(int x, int y) {
-        if (x > width - 1 || x < 0) return 0;
-        if (y > height - 1 || y < 0) return 0;
-
-        return data[y][x];
-    }
-
     public int getHeight() {
         return height;
     }
 
-    public boolean isTileEmpty(int x, int y) {
-        if (x >= width || x < 0) return false;
-        if (y < 0 || y >= height) return true;
+    public int getTile(float x, float y) {
+        int iX = (int)x;
+        int iY = (int)y;
 
-        return data[y][x] <= 0;
+        if (iX >= width || iX < 0) return 1;
+        if (iY < 0 || iY >= height) return 0;
+
+        return data[iY][iX];
+    }
+
+    public boolean isInCheckpoint(float x, float y) {
+        var res = ResourceManager.getInstance();
+        var checkpointSize = res.CHECKPOINT_SIZE;
+
+        if ((x > (float)goalGridX && x < (float)(goalGridX + checkpointSize)) && 
+                (y > (float)goalGridY && y < (float)(goalGridY + checkpointSize)))
+            return true;
+
+        return false;
     }
 
     public void setOffset(float x) {

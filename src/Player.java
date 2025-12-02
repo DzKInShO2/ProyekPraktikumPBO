@@ -7,8 +7,10 @@ public class Player extends Entity {
 
     private Clip walkClip;
 
-    private float velocityY;
+    private boolean isOnGround;
+
     private float velocityX;
+    private float velocityY;
     private final float GRAVITY = 9.8f;
     private final float FRICTION = 2.0f;
 
@@ -23,8 +25,9 @@ public class Player extends Entity {
     public Player(Level level, Finished finished, int x, int y) {
         super(level, x, y);
 
-        velocityY = 0;
         velocityX = 0;
+        velocityY = 0;
+        isOnGround = false;
 
         var res = ResourceManager.getInstance();
         walkClip = SoundManager.getLoop(res.getWalkClip());
@@ -37,95 +40,61 @@ public class Player extends Entity {
     }
 
     public void update(float dt) {
-        // Pengumpulan informasi yang dibutuhkan untuk membuat karakter
-        // bergerak secara konsisten
         var res = ResourceManager.getInstance();
-        var input = InputManager.getInstance();
 
-        var playerToTileRatio =  res.PLAYER_SIZE / res.TILE_SIZE;
-
-        var playerSize = res.PLAYER_SIZE * res.TILE_TO_SCREEN;
         var tileSize = res.TILE_SIZE * res.TILE_TO_SCREEN;
+        var pttr =  res.PLAYER_SIZE / res.TILE_SIZE;
 
-        // Gerakan di sumbu-Y
-        var nextGridY = gridY + playerToTileRatio;
-        var isOnAir = level.isTileEmpty(gridX, nextGridY);
-        if (isOnAir) {
-            velocityY -= GRAVITY * dt * tileSize;
-            System.out.printf("\033[s\033[u");
-        } else {
-            velocityY = 0;
+        var input = InputManager.getInstance();
+        var direction = input.getMoveRight() ? 1 : (input.getMoveLeft() ? -1 : 0);
 
-            // Entah kenapa harus nge-print sesuatu disini supaya ndak
-            // ngelag setelah lompat
-            System.out.printf("\033[s\033[u");
-        }
-
-        if (input.getJump()) {
-            if (!isOnAir) {
-                velocityY = tileSize * JUMP_FORCE;
-
-                SoundManager.playOnce(res.getJumpClip());
-            }
-
+        if (isOnGround && input.getJump()) {
+            velocityY += JUMP_FORCE;
             input.resetJump();
         }
 
-        posY -= velocityY * dt;
-        gridY = (int)(posY / tileSize);
+        velocityY -= GRAVITY * dt;
+        velocityX = direction * SPEED;
 
-        // Gerakan di sumbu-X
-        var directionX = input.getMoveRight() ? 1 : (input.getMoveLeft() ? -1 : 0);
-        if (directionX != 0) {
-            velocityX += SPEED * tileSize;
-
-            if (!isOnAir) {
-                SoundManager.play(walkClip);
-            } else {
-                SoundManager.stop(walkClip);
+        var newPosX = posX + velocityX * dt;
+        var newPosY = posY - velocityY * dt;
+        if (velocityX <= 0) {
+            if (level.getTile(newPosX, posY) > 0 || level.getTile(newPosX, posY + 0.9f) > 0) {
+                newPosX = (int)newPosX;
+                velocityX = 0;
             }
         } else {
-            SoundManager.stop(walkClip);
-        }
-
-        if (velocityX > MAX_VELOCITY_X) {
-            velocityX = MAX_VELOCITY_X;
-        } else if (velocityX < 0) {
-            velocityX = 0;
-        }
-
-        var nextGridX = gridX + (directionX * playerToTileRatio);
-        if (nextGridX < 0) nextGridX = 0;
-
-        var isNextTileEmpty = true;
-        for (var i = 0; i <= playerToTileRatio; i++) {
-            isNextTileEmpty &= level.isTileEmpty(nextGridX, gridY - i);
-        }
-
-        if (isNextTileEmpty) {
-            posX += velocityX * directionX * dt;
-            if (posX < 0) posX = 0;
-
-            gridX = (int)Math.round(posX / tileSize);
-
-            level.setOffset(posX - CAMERA_OFFSET);
-        }
-
-        for (var i = 0; i < playerToTileRatio; i++) {
-            if (level.getTile(gridX - i, gridY - playerToTileRatio) == -1) {
-                SoundManager.stop(walkClip);
-                finished.finished(-1);
+            if (level.getTile(newPosX + pttr, posY) > 0 || level.getTile(newPosX + pttr, posY + 0.9f) > 0) {
+                newPosX = (int)newPosX;
+                velocityX = 0;
             }
         }
 
-        if (gridY >= level.getHeight()) {
-            gridX = 0;
-            gridY = 0;
-            posX = 0;
-            posY = 0;
+        if (velocityY <= 0) {
+            if (level.getTile(newPosX, posY + pttr) > 0 || level.getTile(newPosX + pttr, posY + pttr) > 0) {
+                newPosY = (int)newPosY;
+                velocityY = 0;
 
-            health -= 1;
+                isOnGround = true;
+            }
+        } else {
+            if (level.getTile(newPosX, posY) > 0 || level.getTile(newPosX + pttr, posY) > 0) {
+                newPosY = (int)newPosY;
+                velocityY = 0;
+            }
+
+            isOnGround = false;
         }
+
+        posX = newPosX;
+        posY = newPosY;
+
+        if (level.isInCheckpoint(posX, posY)) {
+            finished.finished(0);
+        }
+
+        level.setOffset((posX * tileSize) - CAMERA_OFFSET);
+        System.out.printf("\033[s\033[u", velocityY);
     }
 
     public void draw(Graphics g) {
@@ -133,8 +102,9 @@ public class Player extends Entity {
         var player = res.getPlayer(res.PLAYER_IDLE);
 
         var playerSize = res.PLAYER_SIZE * res.TILE_TO_SCREEN;
+        var tileSize = res.TILE_SIZE * res.TILE_TO_SCREEN;
         g.drawImage(player, 
-                CAMERA_OFFSET, (int)posY, 
+                CAMERA_OFFSET, (int)(posY * tileSize),
                 playerSize, playerSize,
                 null);
     }
