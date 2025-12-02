@@ -14,11 +14,14 @@ public class ResourceManager {
     public final int CHECKPOINT_SIZE = 64;
 
     public final int PLAYER_IDLE = 0;
+    public final int PLAYER_RUN = 1;
+    public final int PLAYER_JUMP = 2;
+    public final int PLAYER_FALL = 3;
 
     private static ResourceManager instance;
 
     private Image[] tiles;
-    private Image[] player;
+    private AnimationClip[] player;
     private Image checkpoint;
 
     private File walk;
@@ -32,32 +35,45 @@ public class ResourceManager {
     private ResourceManager() {
         try {
             var tileset = ImageIO.read(new File("res/PixelAdventure1Free/Terrain/Terrain (16x16).png"));
-            tileCountX = tileset.getWidth() / TILE_SIZE;
-            tileCountY = tileset.getHeight() / TILE_SIZE;
+            tiles = getSubimages(tileset, TILE_SIZE, TILE_SIZE);
 
-            tiles = new Image[tileCountX * tileCountY];
+            player = new AnimationClip[4];
+            var playerIdleSheet = ImageIO.read(new File("res/PixelAdventure1Free/Main Characters/Virtual Guy/Idle (32x32).png"));
+            var playerRunSheet = ImageIO.read(new File("res/PixelAdventure1Free/Main Characters/Virtual Guy/Run (32x32).png"));
+            var playerJumpSheet = ImageIO.read(new File("res/PixelAdventure1Free/Main Characters/Virtual Guy/Jump (32x32).png"));
+            var playerFallSheet = ImageIO.read(new File("res/PixelAdventure1Free/Main Characters/Virtual Guy/Fall (32x32).png"));
 
-            var i = 0;
-            for (var y = 0; y < tileCountY; y++) {
-                for (var x = 0; x < tileCountX; x++) {
-                    var sub = tileset.getSubimage(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-                    tiles[i++] = (Image)sub;
-                }
-            }
-            player = new Image[1];
-
-            var playerIdle = ImageIO.read(new File("res/PixelAdventure1Free/Main Characters/Virtual Guy/Idle (32x32).png"))
-                .getSubimage(0, 0, PLAYER_SIZE, PLAYER_SIZE);
-
-            player[PLAYER_IDLE] = playerIdle;
+            player[PLAYER_IDLE] = new AnimationClip(getSubimages(playerIdleSheet, PLAYER_SIZE, PLAYER_SIZE), 12);
+            player[PLAYER_RUN] = new AnimationClip(getSubimages(playerRunSheet, PLAYER_SIZE, PLAYER_SIZE), 12);
+            player[PLAYER_JUMP] = new AnimationClip(getSubimages(playerJumpSheet, PLAYER_SIZE, PLAYER_SIZE), 12);
+            player[PLAYER_FALL] = new AnimationClip(getSubimages(playerFallSheet, PLAYER_SIZE, PLAYER_SIZE), 12);
 
             checkpoint = new ImageIcon("res/PixelAdventure1Free/Items/Checkpoints/End/End (Idle).png").getImage();
 
             walk = new File("res/walk.wav");
             jump = new File("res/jump.wav");
 
-        } catch (Exception e) {}
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
+    }
+
+    private Image[] getSubimages(BufferedImage img, int width, int height) {
+        var v = (int)(img.getHeight() / height);
+        var h = (int)(img.getWidth() / width);
+
+        var imgs = new Image[v * h];
+
+        var i = 0;
+        for (var y = 0; y < v; y++) {
+            for (var x = 0; x < h; x++) {
+                var sub = img.getSubimage(x * width, y * height, width, height);
+                imgs[i++] = (Image)sub;
+            }
+        }
+
+        return imgs;
     }
 
     private void initLevels() {
@@ -141,7 +157,7 @@ public class ResourceManager {
         return checkpoint;
     }
 
-    public Image getPlayer(int mode) {
+    public AnimationClip getPlayer(int mode) {
         return player[mode];
     }
 

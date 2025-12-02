@@ -6,7 +6,9 @@ public class Player extends Entity {
     private int health;
 
     private Clip walkClip;
+    private AnimationClip animClip;
 
+    private boolean isFlipped;
     private boolean isOnGround;
 
     private float velocityX;
@@ -28,9 +30,11 @@ public class Player extends Entity {
         velocityX = 0;
         velocityY = 0;
         isOnGround = false;
+        isFlipped = false;
 
         var res = ResourceManager.getInstance();
         walkClip = SoundManager.getLoop(res.getWalkClip());
+        animClip = res.getPlayer(res.PLAYER_IDLE);
 
         this.finished = finished;
     }
@@ -48,18 +52,48 @@ public class Player extends Entity {
         var input = InputManager.getInstance();
         var direction = input.getMoveRight() ? 1 : (input.getMoveLeft() ? -1 : 0);
 
+        if (direction != 0) {
+            isFlipped = direction < 0;
+        }
+
         if (isOnGround && input.getJump()) {
             velocityY += JUMP_FORCE;
+
             SoundManager.playOnce(res.getJumpClip());
             input.resetJump();
         }
 
         velocityY -= GRAVITY * dt;
         velocityX = direction * SPEED;
-        if (isOnGround && velocityX != 0) {
-            SoundManager.play(walkClip);
-        } else {
-            SoundManager.stop(walkClip);
+        if (isOnGround) {
+            if (velocityX != 0) {
+                var runClip = res.getPlayer(res.PLAYER_RUN);
+                if (animClip != runClip) {
+                    runClip.reset();
+                    animClip = runClip;
+                }
+                SoundManager.play(walkClip);
+            } else if (velocityX == 0) {
+                var idleClip = res.getPlayer(res.PLAYER_IDLE);
+                if (animClip != idleClip) {
+                    idleClip.reset();
+                    animClip = idleClip;
+                }
+
+                SoundManager.stop(walkClip);
+            }
+        } else if (!isOnGround) {
+            if (velocityY > 0) {
+                var jumpClip = res.getPlayer(res.PLAYER_JUMP);
+                if (animClip != jumpClip) {
+                    animClip = jumpClip;
+                }
+            } else if (velocityY < 0) {
+                var fallClip = res.getPlayer(res.PLAYER_FALL);
+                if (animClip != fallClip) {
+                    animClip = fallClip;
+                }
+            }
         }
 
         var newPosX = posX + velocityX * dt;
@@ -105,18 +139,26 @@ public class Player extends Entity {
         }
 
         level.setOffset((posX * tileSize) - CAMERA_OFFSET);
+        animClip.update(dt);
         System.out.printf("\033[s\033[u", velocityY);
     }
 
     public void draw(Graphics g) {
         var res = ResourceManager.getInstance();
-        var player = res.getPlayer(res.PLAYER_IDLE);
 
         var playerSize = res.PLAYER_SIZE * res.TILE_TO_SCREEN;
         var tileSize = res.TILE_SIZE * res.TILE_TO_SCREEN;
-        g.drawImage(player, 
-                CAMERA_OFFSET, (int)(posY * tileSize),
-                playerSize, playerSize,
-                null);
+
+        if (isFlipped) {
+            g.drawImage(animClip.getFrame(), 
+                    CAMERA_OFFSET + playerSize, (int)(posY * tileSize),
+                    -playerSize, playerSize,
+                    null);
+        } else {
+            g.drawImage(animClip.getFrame(), 
+                    CAMERA_OFFSET, (int)(posY * tileSize),
+                    playerSize, playerSize,
+                    null);
+        }
     }
 }
