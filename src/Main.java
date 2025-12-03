@@ -16,7 +16,6 @@ public class Main {
     public static MenuPanel createMenuPanel(Container pane) {
         
         Finished finished = (code) -> {
-            // 0 = Quit to Menu, 1 = Win/Next Level
             if (code == 0) {
                 switchPanel(pane, createMenuPanel(pane));
             } else if (code == 1) {
@@ -83,46 +82,22 @@ public class Main {
         );
     }
 
-    private static void setupGlobalInputs(JFrame app) {
-        var input = InputManager.getInstance();
-        var rootPane = app.getRootPane();
-        var inputMap = rootPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
-        var actionMap = rootPane.getActionMap();
-        
-        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_D, 0, false), "moveRight");
-        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_D, 0, true),  "stopRight");
-        
-        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_A, 0, false), "moveLeft");
-        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_A, 0, true),  "stopLeft");
-        
-        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, 0, false), "jump");
-
-        // --- MAPPING AKSI KE INPUT MANAGER ---
-        actionMap.put("moveRight", input.getActionMoveRight());
-        actionMap.put("stopRight", input.getActionStopRight());
-        actionMap.put("moveLeft",  input.getActionMoveLeft());
-        actionMap.put("stopLeft",  input.getActionStopLeft());
-        actionMap.put("jump",      input.getActionJump());
-    }
-
     public static void main(String[] args) {
 
         var app = new JFrame("Super Bagas Pro");
         app.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         SwingUtilities.invokeLater(() -> {
-
             app.setSize(1280, 720);
             app.setResizable(false);
             app.setLocationRelativeTo(null); 
             
-            // Setup input keyboard
-            setupGlobalInputs(app);
+            var input = InputManager.getInstance();
+            var rootPane = app.getRootPane();
+            input.setKeymap(rootPane, "D", "A", "SPACE");
 
-            // Tampilkan Panel Menu Awal
             var contentPane = app.getContentPane();
             var menu = createMenuPanel(contentPane);
-            
             switchPanel(contentPane, menu);
             
             app.setVisible(true);

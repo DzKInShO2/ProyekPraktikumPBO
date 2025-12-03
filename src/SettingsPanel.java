@@ -24,13 +24,13 @@ public class SettingsPanel extends JPanel {
     private JButton btnApply;
     private JButton btnDefault;
 
-    // --- Data Mockup 
-    private int keyLeft = KeyEvent.VK_A;
-    private int keyRight = KeyEvent.VK_D;
-    private int keyJump = KeyEvent.VK_SPACE;
+    private String keyRight;
+    private String keyLeft;
+    private String keyJump;
 
-    // nilai lokal 
-    private float pendingBgmVolume = 1.0f;
+    // --- Original BGM Volume = 1.0f
+    private float originalVolume = 1.0f;
+
     // private float pendingSfxVolume = 1.0f;
     private boolean pendingMuted = false;
 
@@ -46,15 +46,10 @@ public class SettingsPanel extends JPanel {
         setLayout(null);
         setFocusable(true);
         
-        // sync awal dengan InputManager
-        keyLeft  = InputManager.getKeyLeft();
-        keyRight = InputManager.getKeyRight();
-        keyJump  = InputManager.getKeyJump();
-
         // sync awal volume dari SoundManager
-        pendingBgmVolume = SoundManager.getVolume();
+        originalVolume = SoundManager.volume;
         // pendingSfxVolume = SoundManager.getVolume();   ini kalo nanti buat settings sfx nya
-        pendingMuted = SoundManager.isMuted();
+        pendingMuted = SoundManager.muted;
         
         // 1. Load Background
         try {
@@ -85,9 +80,9 @@ public class SettingsPanel extends JPanel {
         // MASTER VOLUME Slider 
         createLabel("Master Volume", centerX - 250, startY + 100);
         bgmSlider = createPixelSlider(centerX - 50, startY + 100);
-        bgmSlider.setValue((int)(pendingBgmVolume * 100));
+        bgmSlider.setValue((int)(SoundManager.volume * 100));
         bgmSlider.addChangeListener(e -> {
-            pendingBgmVolume = bgmSlider.getValue() / 100f; 
+            SoundManager.volume = bgmSlider.getValue() / 100f; 
         });
         add(bgmSlider);
 
@@ -97,7 +92,7 @@ public class SettingsPanel extends JPanel {
         btnMute.addActionListener(e -> {
             pendingMuted = !pendingMuted;
             btnMute.setText(pendingMuted ? "UNMUTE" : "MUTE");
-            SoundManager.mute(pendingMuted);
+            SoundManager.muted = pendingMuted;
         });
         add(btnMute);
 
@@ -105,10 +100,6 @@ public class SettingsPanel extends JPanel {
         btnTestSfx = new PixelButton("TEST SOUND");
         btnTestSfx.setBounds(centerX, startY + 150, 200, 40);
         btnTestSfx.addActionListener(e -> {
-            // terapkan dulu master volume & mute lokal ke sistem
-            SoundManager.setVolume(pendingBgmVolume);
-            SoundManager.mute(pendingMuted);
-
             var res = ResourceManager.getInstance();
             SoundManager.playOnce(res.getJumpClip());
         });
@@ -118,18 +109,23 @@ public class SettingsPanel extends JPanel {
         int controlY = startY + 230;
         createSectionLabel("CONTROLS SETUP", centerX - 250, controlY);
 
+        var input = InputManager.getInstance();
+        keyRight = input.getMoveRightString();
+        keyLeft = input.getMoveLeftString();
+        keyJump = input.getJumpString();
+
         createLabel("Move Left", centerX - 250, controlY + 40);
-        btnLeft = createRemapButton(KeyEvent.getKeyText(keyLeft), centerX, controlY + 35);
+        btnLeft = createRemapButton(keyLeft, centerX, controlY + 35);
         btnLeft.addActionListener(e -> startRemapping(btnLeft));
         add(btnLeft);
 
         createLabel("Move Right", centerX - 250, controlY + 90);
-        btnRight = createRemapButton(KeyEvent.getKeyText(keyRight), centerX, controlY + 85);
+        btnRight = createRemapButton(keyRight, centerX, controlY + 85);
         btnRight.addActionListener(e -> startRemapping(btnRight));
         add(btnRight);
 
         createLabel("Jump", centerX - 250, controlY + 140);
-        btnJump = createRemapButton(KeyEvent.getKeyText(keyJump), centerX, controlY + 135);
+        btnJump = createRemapButton(keyJump, centerX, controlY + 135);
         btnJump.addActionListener(e -> startRemapping(btnJump));
         add(btnJump);
 
@@ -138,6 +134,7 @@ public class SettingsPanel extends JPanel {
         btnBack.setBounds(centerX - 240, startY + 420, 180, 50);
         btnBack.addActionListener(e -> {
             // TIDAK menyimpan perubahan: kembali tanpa apply
+            SoundManager.volume = originalVolume;
             if (onBackAction != null) onBackAction.run();
         });
         add(btnBack);
@@ -146,15 +143,7 @@ public class SettingsPanel extends JPanel {
         btnApply = new PixelButton("APPLY");
         btnApply.setBounds(centerX + 5, startY + 420, 140, 50);
         btnApply.addActionListener(e -> {
-            // Terapkan semua pending settings ke sistem
-            InputManager.setKeyLeft(keyLeft);
-            InputManager.setKeyRight(keyRight);
-            InputManager.setKeyJump(keyJump);
-
-            // simpan volume & mute
-            SoundManager.setVolume(pendingBgmVolume);
-            // kalau nanti dipisah BGM/SFX, di sini pakai setBgmVolume / setSfxVolume
-            SoundManager.mute(pendingMuted);
+            SoundManager.muted = pendingMuted;
 
             applyKeyBindingsToRoot();
 
@@ -166,12 +155,11 @@ public class SettingsPanel extends JPanel {
         btnDefault = new PixelButton("DEFAULT");
         btnDefault.setBounds(centerX + 230, startY + 420, 140, 50);
         btnDefault.addActionListener(e -> {
-            // reset nilai lokal ke default
-            keyLeft  = KeyEvent.VK_A;
-            keyRight = KeyEvent.VK_D;
-            keyJump  = KeyEvent.VK_SPACE;
+            keyLeft = "A";
+            keyRight = "D";
+            keyJump = "SPACE";
 
-            pendingBgmVolume = 1.0f;
+            SoundManager.volume = originalVolume;
             // pendingSfxVolume = 1.0f;
             pendingMuted = false;
 
@@ -179,9 +167,9 @@ public class SettingsPanel extends JPanel {
             bgmSlider.setValue(100);
             btnMute.setText("MUTE");
 
-            btnLeft.setText(KeyEvent.getKeyText(keyLeft));
-            btnRight.setText(KeyEvent.getKeyText(keyRight));
-            btnJump.setText(KeyEvent.getKeyText(keyJump));
+            btnLeft.setText(input.getMoveRightString());
+            btnRight.setText(input.getMoveLeftString());
+            btnJump.setText(input.getJumpString());
         });
         add(btnDefault);
     }
@@ -197,12 +185,13 @@ public class SettingsPanel extends JPanel {
 
     private void processRemap(int keyCode, String keyText) {
         // Hanya ubah nilai lokal, belum ke InputManager
+        var rootPane = getRootPane();
         if (activeRemapButton == btnLeft) {
-            keyLeft = keyCode;
+            keyLeft = keyText;
         } else if (activeRemapButton == btnRight) {
-            keyRight = keyCode;
+            keyRight = keyText;
         } else if (activeRemapButton == btnJump) {
-            keyJump = keyCode;
+            keyJump = keyText;
         }
 
         // Kembalikan tampilan tombol
@@ -219,28 +208,9 @@ public class SettingsPanel extends JPanel {
 
     // Terapkan ulang key binding ke rootPane berdasarkan setting terbaru
     private void applyKeyBindingsToRoot() {
-        JRootPane root = SwingUtilities.getRootPane(this);
-        if (root == null) return;
-
+        JRootPane root = getRootPane();
         var input = InputManager.getInstance();
-        var inputMap = root.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
-        var actionMap = root.getActionMap();
-
-        inputMap.clear();
-
-        inputMap.put(KeyStroke.getKeyStroke(InputManager.getKeyRight(), 0, false), "moveRight");
-        inputMap.put(KeyStroke.getKeyStroke(InputManager.getKeyRight(), 0, true),  "stopRight");
-
-        inputMap.put(KeyStroke.getKeyStroke(InputManager.getKeyLeft(), 0, false), "moveLeft");
-        inputMap.put(KeyStroke.getKeyStroke(InputManager.getKeyLeft(), 0, true),  "stopLeft");
-
-        inputMap.put(KeyStroke.getKeyStroke(InputManager.getKeyJump(), 0, false), "jump");
-
-        actionMap.put("moveRight", input.getActionMoveRight());
-        actionMap.put("stopRight", input.getActionStopRight());
-        actionMap.put("moveLeft",  input.getActionMoveLeft());
-        actionMap.put("stopLeft",  input.getActionStopLeft());
-        actionMap.put("jump",      input.getActionJump());
+        input.setKeymap(root, keyRight, keyLeft, keyJump);
     }
 
     // Method untuk label biasa dengan stroke
