@@ -14,41 +14,24 @@ public class SettingsPanel extends JPanel {
     private boolean isRemapping = false; 
     private JButton activeRemapButton = null; 
 
-    // --- UI Components ---
-    private JSlider bgmSlider;
     private JButton btnLeft, btnRight, btnJump;
-    private JButton btnBack;
-    // Tambahan:
-    private JButton btnMute;
-    private JButton btnTestSfx;
-    private JButton btnApply;
-    private JButton btnDefault;
 
     private String keyRight;
     private String keyLeft;
     private String keyJump;
 
-    // --- Original BGM Volume = 1.0f
     private float originalVolume = 1.0f;
-
-    // private float pendingSfxVolume = 1.0f;
     private boolean pendingMuted = false;
 
-    // --- Colors & Fonts (Pixel Art Style) ---
-    private final Color BORDER_COLOR = new Color(60, 40, 20); // Cokelat Tua/Hitam
-    private final Color ACCENT_COLOR = new Color(255, 215, 0); // Kuning Emas
-    // font label
+    private final Color BORDER_COLOR = new Color(60, 40, 20);
+    private final Color ACCENT_COLOR = new Color(255, 215, 0);
     private final Font PIXEL_FONT = new Font("Monospaced", Font.BOLD, 16);
-    // font section header
-    private final Font SECTION_FONT = new Font("Monospaced", Font.BOLD, 22);
 
     public SettingsPanel(Runnable onBackAction) {
         setLayout(null);
         setFocusable(true);
         
-        // sync awal volume dari SoundManager
         originalVolume = SoundManager.volume;
-        // pendingSfxVolume = SoundManager.getVolume();   ini kalo nanti buat settings sfx nya
         pendingMuted = SoundManager.muted;
         
         // 1. Load Background
@@ -79,7 +62,7 @@ public class SettingsPanel extends JPanel {
 
         // MASTER VOLUME Slider 
         createLabel("Master Volume", centerX - 250, startY + 100);
-        bgmSlider = createPixelSlider(centerX - 50, startY + 100);
+        var bgmSlider = createPixelSlider(centerX - 50, startY + 100);
         bgmSlider.setValue((int)(SoundManager.volume * 100));
         bgmSlider.addChangeListener(e -> {
             SoundManager.volume = bgmSlider.getValue() / 100f; 
@@ -87,7 +70,7 @@ public class SettingsPanel extends JPanel {
         add(bgmSlider);
 
         // Tombol MUTE di samping slider
-        btnMute = new PixelButton(pendingMuted ? "UNMUTE" : "MUTE");
+        var btnMute = new PixelButton(pendingMuted ? "UNMUTE" : "MUTE");
         btnMute.setBounds(centerX + 270, startY + 95, 100, 40);
         btnMute.addActionListener(e -> {
             pendingMuted = !pendingMuted;
@@ -97,7 +80,7 @@ public class SettingsPanel extends JPanel {
         add(btnMute);
 
         // Tombol TEST SFX di bawah slider volume
-        btnTestSfx = new PixelButton("TEST SOUND");
+        var btnTestSfx = new PixelButton("TEST SOUND");
         btnTestSfx.setBounds(centerX, startY + 150, 200, 40);
         btnTestSfx.addActionListener(e -> {
             var res = ResourceManager.getInstance();
@@ -130,7 +113,7 @@ public class SettingsPanel extends JPanel {
         add(btnJump);
 
         // --- BACK BUTTON ---
-        btnBack = new PixelButton("BACK TO MENU");
+        var btnBack = new PixelButton("BACK TO MENU");
         btnBack.setBounds(centerX - 240, startY + 420, 180, 50);
         btnBack.addActionListener(e -> {
             // TIDAK menyimpan perubahan: kembali tanpa apply
@@ -140,7 +123,7 @@ public class SettingsPanel extends JPanel {
         add(btnBack);
 
         // Tombol APPLY
-        btnApply = new PixelButton("APPLY");
+        var btnApply = new PixelButton("APPLY");
         btnApply.setBounds(centerX + 5, startY + 420, 140, 50);
         btnApply.addActionListener(e -> {
             SoundManager.muted = pendingMuted;
@@ -152,7 +135,7 @@ public class SettingsPanel extends JPanel {
         add(btnApply);
 
         // Tombol SET DEFAULT
-        btnDefault = new PixelButton("DEFAULT");
+        var btnDefault = new PixelButton("DEFAULT");
         btnDefault.setBounds(centerX + 230, startY + 420, 140, 50);
         btnDefault.addActionListener(e -> {
             keyLeft = "A";
@@ -167,9 +150,11 @@ public class SettingsPanel extends JPanel {
             bgmSlider.setValue(100);
             btnMute.setText("MUTE");
 
-            btnLeft.setText(input.getMoveRightString());
-            btnRight.setText(input.getMoveLeftString());
+            btnLeft.setText(input.getMoveLeftString());
+            btnRight.setText(input.getMoveRightString());
             btnJump.setText(input.getJumpString());
+
+            applyKeyBindingsToRoot();
         });
         add(btnDefault);
     }
@@ -184,7 +169,6 @@ public class SettingsPanel extends JPanel {
     }
 
     private void processRemap(int keyCode, String keyText) {
-        // Hanya ubah nilai lokal, belum ke InputManager
         var rootPane = getRootPane();
         if (activeRemapButton == btnLeft) {
             keyLeft = keyText;
@@ -194,9 +178,7 @@ public class SettingsPanel extends JPanel {
             keyJump = keyText;
         }
 
-        // Kembalikan tampilan tombol
         activeRemapButton.setText(keyText.toUpperCase());
-        // Ganti dari Color.WHITE menjadi ACCENT_COLOR
         activeRemapButton.setBackground(ACCENT_COLOR);
         
         isRemapping = false;
@@ -288,7 +270,7 @@ public class SettingsPanel extends JPanel {
                 g2.dispose();
             }
         };
-        lbl.setFont(SECTION_FONT);
+        lbl.setFont(PIXEL_FONT.deriveFont(22f));
         lbl.setForeground(ACCENT_COLOR);
         lbl.setHorizontalAlignment(SwingConstants.LEFT); 
         lbl.setBounds(x, y, 300, 35);
