@@ -37,9 +37,9 @@ public class WinPanel extends JPanel {
         super.paintComponent(g);
 
         var res = ResourceManager.getInstance();
-        var i = res.getBlueBackground().getImage();
-        var w = res.getBlueBackground().getIconWidth();
-        var h = res.getBlueBackground().getIconHeight();
+        var i = res.getBlueBackground();
+        var w = i.getWidth(null);
+        var h = i.getHeight(null);
 
         for (var y = 0; y < getHeight(); y += h) {
             for (var x = 0; x < getWidth(); x += w) {

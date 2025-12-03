@@ -26,7 +26,7 @@ public class ResourceManager {
     private Image[] tiles;
     private AnimationClip[] player;
     private Image checkpoint;
-    private ImageIcon blueBackground;
+    private Image blueBackground;
 
     private File walk;
     private File jump;
@@ -50,7 +50,7 @@ public class ResourceManager {
             player[PLAYER_FALL] = new AnimationClip(getSubimages(playerFallSheet, PLAYER_SIZE, PLAYER_SIZE), 12);
 
             checkpoint = new ImageIcon("res/PixelAdventure1Free/Items/Checkpoints/End/End (Idle).png").getImage();
-            blueBackground = new ImageIcon("res/PixelAdventure1Free/Background/Blue.png");
+            blueBackground = new ImageIcon("res/PixelAdventure1Free/Background/Blue.png").getImage();
 
             walk = new File("res/walk.wav");
             jump = new File("res/jump.wav");
@@ -141,7 +141,7 @@ public class ResourceManager {
         return font;
     }
 
-    public ImageIcon getBlueBackground() {
+    public Image getBlueBackground() {
         return blueBackground;
     }
 
