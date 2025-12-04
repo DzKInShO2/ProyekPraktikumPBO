@@ -14,12 +14,13 @@ public class SaveManager {
             statement.executeUpdate("""
                     CREATE TABLE IF NOT EXISTS progress (
                         level INTEGER,
+                        health INTEGER,
                         position_x REAL,
                         position_y REAL
                         );
                     """);
             if (isNew) {
-                statement.execute("INSERT INTO progress VALUES (0, 0, 0)");
+                statement.execute("INSERT INTO progress VALUES (0, 4, 0, 0)");
             }
         } catch (SQLException e) {
             return false;
@@ -35,6 +36,17 @@ public class SaveManager {
         ) {
             var rs = statement.executeQuery("SELECT level FROM progress");
             if (rs.next()) return rs.getInt("level");
+        } catch (SQLException e) {}
+        return 0;
+    }
+
+    public static int getHealth() {
+        try (
+            var conn = DriverManager.getConnection("jdbc:sqlite:" + saveFilePath);
+            var statement = conn.createStatement();
+        ) {
+            var rs = statement.executeQuery("SELECT health FROM progress");
+            if (rs.next()) return rs.getInt("health");
         } catch (SQLException e) {}
         return 0;
     }
@@ -71,6 +83,15 @@ public class SaveManager {
         } catch (SQLException e) {}
     }
 
+    public static void setHealth(int health) {
+        try (
+            var conn = DriverManager.getConnection("jdbc:sqlite:" + saveFilePath);
+            var statement = conn.prepareStatement("UPDATE progress SET health = ?");
+        ) {
+            statement.setInt(1, health);
+            statement.execute();
+        } catch (SQLException e) {}
+    }
 
     public static void setPosition(float x, float y) {
         try (

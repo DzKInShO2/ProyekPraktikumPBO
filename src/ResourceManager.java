@@ -26,6 +26,7 @@ public class ResourceManager {
     private Image[] tiles;
     private AnimationClip[] player;
     private Image checkpoint;
+    private Image health;
     private Image blueBackground;
 
     private File walk;
@@ -51,6 +52,7 @@ public class ResourceManager {
 
             checkpoint = new ImageIcon("res/PixelAdventure1Free/Items/Checkpoints/End/End (Idle).png").getImage();
             blueBackground = new ImageIcon("res/PixelAdventure1Free/Background/Blue.png").getImage();
+            health = new ImageIcon("res/health.png").getImage();
 
             walk = new File("res/walk.wav");
             jump = new File("res/jump.wav");
@@ -169,5 +171,9 @@ public class ResourceManager {
         if (level >= levels.length) return null;
 
         return levels[level];
+    }
+
+    public Image getHealth() {
+        return health;
     }
 }

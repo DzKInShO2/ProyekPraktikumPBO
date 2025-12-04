@@ -6,6 +6,7 @@ public class Gameplay extends JPanel {
     private int ilevel;
     private Level level;
     private Player player;
+    private int attemp;
 
     private Finished finished;
     private Thread updateThread;
@@ -14,9 +15,10 @@ public class Gameplay extends JPanel {
     private volatile boolean isUpdateRunning;
     private boolean isPaused;
 
-    public Gameplay(int level, float x, float y, Finished finished) {
+    public Gameplay(int level, int health, float x, float y, Finished finished) {
         setLayout(new BorderLayout(0, 0));
 
+        SaveManager.setHealth(health);
         SaveManager.setLevel(level);
         SaveManager.setPosition(x, y);
 
@@ -24,11 +26,22 @@ public class Gameplay extends JPanel {
         this.level = res.getLevel(ilevel = level);
         this.finished = finished;
 
+        attemp = health;
         isPaused = false;
         player = new Player(this.level, (code) -> {
             if (code == 0) {
                 finished();
-            } 
+            } else if (code == -1) {
+                attemp -= 1;
+                if (attemp < 1) {
+                    isUpdateRunning = false;
+                    isDrawRunning = false;
+
+                    finished.finished(-1);
+                } else {
+                    SaveManager.setHealth(attemp);
+                }
+            }
         }, x, y);
 
         var levelLabel = new JLabel(String.format("Level %d", level + 1));
@@ -125,8 +138,22 @@ public class Gameplay extends JPanel {
 
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
+
+        var g2d = (Graphics2D)g;
+
+        var res = ResourceManager.getInstance();
+        var heart = res.getHealth();
+        var tileSize = res.TILE_SIZE * res.TILE_TO_SCREEN;
+        var heartSize = (int)(tileSize / 1.5);
+
         player.draw(g);
         level.draw(g);
+
+        var health = String.format("x %d", attemp);
+        g2d.drawImage(heart, 0, tileSize, heartSize, heartSize, null);
+
+        g2d.setFont(res.getFont().deriveFont(20f));
+        g2d.drawString(health, heartSize * 1.2f, tileSize + (heartSize / 1.5f));
     }
 
     private void finished() {
@@ -140,7 +167,7 @@ public class Gameplay extends JPanel {
 
             rootPane.removeAll();
 
-            var gameplay = new Gameplay(ilevel, 0, 0, finished);
+            var gameplay = new Gameplay(ilevel, attemp, 0, 0, finished);
             rootPane.add(gameplay);
 
             rootPane.revalidate();

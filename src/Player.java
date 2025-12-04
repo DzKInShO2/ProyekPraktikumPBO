@@ -124,6 +124,7 @@ public class Player extends Entity {
         if (posY > level.getHeight()) {
             posX = posY = 0;
             velocityX = velocityY = 0;
+            finished.finished(-1);
         }
 
         if (level.isInCheckpoint(posX, posY)) {

@@ -22,6 +22,10 @@ public class Main {
                 switchPanel(pane, new WinPanel(() -> {
                     switchPanel(pane, createMenuPanel(pane));
                 }));
+            } else if (code == -1) {
+                switchPanel(pane, new LosePanel(() -> {
+                    switchPanel(pane, createMenuPanel(pane));
+                }));
             }
         };
 
@@ -35,10 +39,11 @@ public class Main {
                     
                     if (SaveManager.initialize(path, false)) {
                         var level = SaveManager.getLevel();
+                        var health = SaveManager.getHealth();
                         var x = (float)SaveManager.getPositionX();
                         var y = (float)SaveManager.getPositionY();
 
-                        var gameplay = new Gameplay(level, x, y, finished);
+                        var gameplay = new Gameplay(level, health, x, y, finished);
                         switchPanel(pane, gameplay);
                     } else {
                         JOptionPane.showMessageDialog(pane, 
@@ -58,7 +63,7 @@ public class Main {
                     
                     // Initialize save baru (reset level 1)
                     if (SaveManager.initialize(path, true)) {
-                        var gameplay = new Gameplay(0, 100, 100, finished);
+                        var gameplay = new Gameplay(0, 4, 100, 100, finished);
                         switchPanel(pane, gameplay);
                     }
                 }
